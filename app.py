@@ -1,0 +1,32 @@
+import os
+import re
+from flask import Flask, jsonify, request
+
+app = Flask(__name__)
+
+TICKETS = {
+    "INC-1842": {"status": "OPEN", "title": "MM SAS Onay Gelistirmesi", "assignedTo": "USER102", "sapTransportAllowed": True},
+    "INC-2026": {"status": "IN_PROGRESS", "title": "SAP Transport Entegrasyon Testi", "assignedTo": "USER102", "sapTransportAllowed": True},
+    "INC-3001": {"status": "CLOSED", "title": "Kapatilmis Cagri", "assignedTo": "USER103", "sapTransportAllowed": False},
+}
+
+@app.get("/")
+def home():
+    return jsonify(service="SAPARTE TTM Ticket Mock API", version="1.0", endpoints=["GET /health", "GET /api/tickets/<ticket_id>"])
+
+@app.get("/health")
+def health():
+    return jsonify(status="ok")
+
+@app.get("/api/tickets/<ticket_id>")
+def get_ticket(ticket_id):
+    ticket_id = ticket_id.upper().strip()
+    if not re.fullmatch(r"INC-[0-9]{1,24}", ticket_id):
+        return jsonify(ticketId=ticket_id, exists=False, error="INVALID_FORMAT", message="Expected INC-1234"), 400
+    ticket = TICKETS.get(ticket_id)
+    if ticket is None:
+        return jsonify(ticketId=ticket_id, exists=False, error="NOT_FOUND", message="Ticket not found"), 404
+    return jsonify(ticketId=ticket_id, exists=True, **ticket), 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "10000")))
