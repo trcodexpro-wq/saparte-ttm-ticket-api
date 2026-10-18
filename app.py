@@ -18,6 +18,54 @@ def home():
 def health():
     return jsonify(status="ok")
 
+# Mevcut Flask uygulamasına eklenecek endpoint
+
+@app.get("/api/tickets")
+def get_tickets():
+    tickets = [
+        {
+            "ticketId": "INC-1842",
+            "title": "MM SAS Onay Geliştirmesi",
+            "status": "OPEN",
+            "sapTransportAllowed": True
+        },
+        {
+            "ticketId": "INC-2026",
+            "title": "Malzeme Ana Veri Kontrolü",
+            "status": "IN_PROGRESS",
+            "sapTransportAllowed": True
+        },
+        {
+            "ticketId": "INC-3001",
+            "title": "Eski Servis Hatası",
+            "status": "CLOSED",
+            "sapTransportAllowed": False
+        }
+    ]
+
+    search = request.args.get("search", "").strip().lower()
+    allowed_only = request.args.get(
+        "allowedOnly", "true"
+    ).lower() == "true"
+
+    if search:
+        tickets = [
+            t for t in tickets
+            if search in t["ticketId"].lower()
+            or search in t["title"].lower()
+        ]
+
+    if allowed_only:
+        tickets = [
+            t for t in tickets
+            if t["sapTransportAllowed"]
+        ]
+
+    return jsonify({
+        "tickets": tickets,
+        "total": len(tickets)
+    }), 200
+
 @app.get("/api/tickets/<ticket_id>")
 def get_ticket(ticket_id):
     ticket_id = ticket_id.upper().strip()
