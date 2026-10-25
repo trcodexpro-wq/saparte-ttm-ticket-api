@@ -54,45 +54,21 @@ def health():
 
 # Mevcut Flask uygulamasına eklenecek endpoint
 
+
 @app.get("/api/tickets")
 def get_tickets():
-    tickets = [
-        {
-            "ticketId": "INC-1842",
-            "title": "MM SAS Onay Geliştirmesi",
-            "status": "OPEN",
-            "sapTransportAllowed": True
-        },
-        {
-            "ticketId": "INC-2026",
-            "title": "Malzeme Ana Veri Kontrolü",
-            "status": "IN_PROGRESS",
-            "sapTransportAllowed": True
-        },
-        {
-            "ticketId": "INC-3001",
-            "title": "Eski Servis Hatası",
-            "status": "CLOSED",
-            "sapTransportAllowed": False
-        }
-    ]
 
-    search = request.args.get("search", "").strip().lower()
-    allowed_only = request.args.get(
-        "allowedOnly", "true"
-    ).lower() == "true"
+    search = request.args.get(
+        "search", ""
+    ).strip().lower()
+
+    tickets = list(TICKETS.values())
 
     if search:
         tickets = [
-            t for t in tickets
-            if search in t["ticketId"].lower()
-            or search in t["title"].lower()
-        ]
-
-    if allowed_only:
-        tickets = [
-            t for t in tickets
-            if t["sapTransportAllowed"]
+            ticket for ticket in tickets
+            if search in ticket["ticketId"].lower()
+            or search in ticket["title"].lower()
         ]
 
     return jsonify({
@@ -100,15 +76,24 @@ def get_tickets():
         "total": len(tickets)
     }), 200
 
+
 @app.get("/api/tickets/<ticket_id>")
 def get_ticket(ticket_id):
-    ticket_id = ticket_id.upper().strip()
-    if not re.fullmatch(r"INC-[0-9]{1,24}", ticket_id):
-        return jsonify(ticketId=ticket_id, exists=False, error="INVALID_FORMAT", message="Expected INC-1234"), 400
-    ticket = TICKETS.get(ticket_id)
+
+    ticket = TICKETS.get(ticket_id.upper())
+
     if ticket is None:
-        return jsonify(ticketId=ticket_id, exists=False, error="NOT_FOUND", message="Ticket not found"), 404
-    return jsonify(ticketId=ticket_id, exists=True, **ticket), 200
+        return jsonify({
+            "ticketId": ticket_id,
+            "exists": False,
+            "message": "Ticket not found"
+        }), 404
+
+    return jsonify({
+        **ticket,
+        "exists": True
+    }), 200
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "10000")))
