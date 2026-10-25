@@ -4,11 +4,45 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
+
 TICKETS = {
-    "INC-1842": {"status": "OPEN", "title": "MM SAS Onay Gelistirmesi", "assignedTo": "USER102", "sapTransportAllowed": True},
-    "INC-2026": {"status": "IN_PROGRESS", "title": "SAP Transport Entegrasyon Testi", "assignedTo": "USER102", "sapTransportAllowed": True},
-    "INC-3001": {"status": "CLOSED", "title": "Kapatilmis Cagri", "assignedTo": "USER103", "sapTransportAllowed": False},
+    "INC-1842": {
+        "ticketId": "INC-1842",
+        "title": "MM SAS Onay Geliştirmesi",
+        "status": "IT_APPROVED"
+    },
+    "INC-2026": {
+        "ticketId": "INC-2026",
+        "title": "Malzeme Ana Veri Kontrolü",
+        "status": "IN_PROGRESS"
+    },
+    "INC-3001": {
+        "ticketId": "INC-3001",
+        "title": "Eski Servis Hatası",
+        "status": "CANCELLED"
+    },
+    "INC-4001": {
+        "ticketId": "INC-4001",
+        "title": "FI Rapor Geliştirmesi",
+        "status": "PENDING_IT_APPROVAL"
+    },
+    "INC-5001": {
+        "ticketId": "INC-5001",
+        "title": "Satınalma Onay Akışı",
+        "status": "BUSINESS_TESTING"
+    },
+    "INC-6001": {
+        "ticketId": "INC-6001",
+        "title": "Üretim Planlama Geliştirmesi",
+        "status": "BUSINESS_APPROVED"
+    },
+    "INC-7001": {
+        "ticketId": "INC-7001",
+        "title": "Depo Yönetimi Geliştirmesi",
+        "status": "TEST_REJECTED"
+    }
 }
+
 
 @app.get("/")
 def home():
