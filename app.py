@@ -94,6 +94,58 @@ def get_ticket(ticket_id):
         "exists": True
     }), 200
 
+import os
+from flask import request
 
+VALID_STATUSES = {
+    "OPEN",
+    "PENDING_IT_APPROVAL",
+    "IT_APPROVED",
+    "IN_PROGRESS",
+    "BUSINESS_TESTING",
+    "TEST_REJECTED",
+    "BUSINESS_APPROVED",
+    "CANCELLED",
+}
+
+
+@app.post("/api/test/tickets/<ticket_id>/status")
+def update_ticket_status(ticket_id):
+    api_key = os.environ.get("TTM_TEST_ADMIN_KEY")
+
+    if not api_key:
+        return jsonify({"message": "Test admin API disabled"}), 503
+
+    supplied_key = request.headers.get("X-Test-Admin-Key", "")
+
+    if not supplied_key or not __import__("hmac").compare_digest(
+        supplied_key, api_key
+    ):
+        return jsonify({"message": "Unauthorized"}), 401
+
+    ticket = TICKETS.get(ticket_id.upper())
+
+    if ticket is None:
+        return jsonify({"message": "Ticket not found"}), 404
+
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify({"message": "Invalid JSON"}), 400
+
+    new_status = data.get("status")
+
+    if not isinstance(new_status, str) or new_status not in VALID_STATUSES:
+        return jsonify({"message": "Invalid status"}), 400
+
+    ticket["status"] = new_status
+
+    return jsonify({
+        "ticketId": ticket["ticketId"],
+        "title": ticket["title"],
+        "status": ticket["status"],
+        "updated": True
+    }), 200
+    
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "10000")))
